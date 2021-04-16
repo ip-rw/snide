@@ -46,8 +46,8 @@ type Server struct {
 
 // NewServer constructs a new server but does not start it, use Run to start it afterwards.
 // Calling New(0) is valid and comes with working defaults:
-// * If cacheSize is 0 a default value will beerr used. to disable caches use a negative value.
-// * If no upstream servers are specified deferrault ones will be used.
+// * If cacheSize is 0 a default value will be used. to disable caches use a negative value.
+// * If no upstream servers are specified default ones will be used.
 func NewServer(cacheSize int, evictMetrics bool, upstreamServers ...string) *Server {
 	switch {
 	case cacheSize == 0:
@@ -125,8 +125,8 @@ func (s *Server) Run(ctx context.Context, addr string) error {
 		for {
 			qr := qps.Rate() / 5
 			fr := fps.Rate() / 5
-			if qr > 0 || fr > 0 {
-				log.Printf("%d qps, %d fps\n", qr, fr)
+			if qr > 50 || fr > 50 {
+				log.Printf("%d qps, %d fps\n", qps.Rate()/5, fps.Rate()/5)
 			}
 			time.Sleep(3 * time.Second)
 		}
@@ -149,7 +149,6 @@ func (s *Server) Run(ctx context.Context, addr string) error {
 		}
 	}()
 
-	go s.refresher(ctx)
 	go s.timer(ctx)
 
 	for _, s := range servers {
@@ -258,14 +257,14 @@ func (s *Server) now() time.Time {
 
 func (s *Server) forwardMessageAndCacheResponse(q *dns.Msg) (m *dns.Msg) {
 	for c := 0; m == nil && c < connectionsPerUpstream; c++ {
-		log.Debugf("Retrying %q [%d/%d]...", q.Question, c+1, connectionsPerUpstream)
+		log.Tracef("(Re)trying %q [%d/%d]...", q.Question, c+1, connectionsPerUpstream)
 		m = s.forwardMessageAndGetResponse(q)
 		if m != nil {
 			break
 		}
 	}
 	if m == nil {
-		log.Infof("Giving up on %q after %d connection retries.", q.Question, connectionsPerUpstream)
+		log.Debugf("Giving up on %q after %d connection retries.", q.Question, connectionsPerUpstream)
 		return nil
 	}
 	s.cache.put(q, m)
@@ -287,7 +286,8 @@ func (s *Server) forwardMessageAndGetResponse(q *dns.Msg) (m *dns.Msg) {
 			return r
 		} else {
 			fps.Incr(1)
-			log.Infof("%v", r)
+			log.Infof("%q", q.String())
+			log.Infof("%q", r.String())
 		}
 	}
 	return nil

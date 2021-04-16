@@ -41,7 +41,7 @@ func (c *cache) get(mk *dns.Msg) (*dns.Msg, bool) {
 	k := key(mk)
 	r, ok := c.c.Get(k)
 	if !ok || r == nil {
-		log.Debugf("[CACHE] MISS %q", k)
+		log.Tracef("[CACHE] MISS %q", k)
 		return nil, false
 	}
 	v := r.(cacheValue)
@@ -50,14 +50,14 @@ func (c *cache) get(mk *dns.Msg) (*dns.Msg, bool) {
 	mv.Id = mk.Id
 	// If the TTL has expired, speculatively return the cache entry anyway with a short TTL, and refresh it.
 	if v.exp.Before(time.Now().UTC()) {
-		log.Debugf("[CACHE] MISS + REFRESH due to expired TTL for %q", k)
+		log.Tracef("[CACHE] MISS + REFRESH due to expired TTL for %q", k)
 		// Set a very short TTL
 		for _, a := range mv.Answer {
 			a.Header().Ttl = 60
 		}
 		return mv, false
 	}
-	log.Debugf("[CACHE] HIT %q", k)
+	log.Tracef("[CACHE] HIT %q", k)
 	// Rewrite the TTL.
 	for _, a := range mv.Answer {
 		ttl := uint32(time.Since(v.exp).Seconds() * -1)
@@ -80,7 +80,7 @@ func (c *cache) put(k *dns.Msg, v *dns.Msg) {
 	cacheKey := key(k)
 	// Do not cache DNS errors.
 	if v.Rcode != dns.RcodeSuccess {
-		log.Debugf("[CACHE] Did not cache error answer (%v) for %q", dns.OpcodeToString[v.Rcode], cacheKey)
+		log.Tracef("[CACHE] Did not cache error answer (%v) for %q", dns.OpcodeToString[v.Rcode], cacheKey)
 		return
 	}
 	for _, a := range v.Answer {
