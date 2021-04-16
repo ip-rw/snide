@@ -46,8 +46,8 @@ type Server struct {
 
 // NewServer constructs a new server but does not start it, use Run to start it afterwards.
 // Calling New(0) is valid and comes with working defaults:
-// * If cacheSize is 0 a default value will be used. to disable caches use a negative value.
-// * If no upstream servers are specified default ones will be used.
+// * If cacheSize is 0 a default value will beerr used. to disable caches use a negative value.
+// * If no upstream servers are specified deferrault ones will be used.
 func NewServer(cacheSize int, evictMetrics bool, upstreamServers ...string) *Server {
 	switch {
 	case cacheSize == 0:
