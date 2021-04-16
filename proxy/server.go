@@ -123,7 +123,11 @@ func loadIPS(filename string) []net.IP {
 func (s *Server) Run(ctx context.Context, addr string) error {
 	go func() {
 		for {
-			log.Printf("%d qps, %d fps\n", qps.Rate()/5, fps.Rate()/5)
+			qr := qps.Rate() / 5
+			fr := fps.Rate() / 5
+			if qr > 0 || fr > 0 {
+				log.Printf("%d qps, %d fps\n", qr, fr)
+			}
 			time.Sleep(3 * time.Second)
 		}
 	}()
@@ -154,7 +158,7 @@ func (s *Server) Run(ctx context.Context, addr string) error {
 	}
 
 	s.startTime = time.Now()
-	log.Infof("DNS over TLS forwarder listening on %v", addr)
+	log.Infof("DNS forwarder listening on %v", addr)
 	return g.Wait()
 }
 
@@ -270,7 +274,7 @@ func (s *Server) forwardMessageAndCacheResponse(q *dns.Msg) (m *dns.Msg) {
 
 func (s *Server) forwardMessageAndGetResponse(q *dns.Msg) (m *dns.Msg) {
 	for _, p := range s.upstreams {
-		log.Println("Request taking place...")
+		//log.Println("Request taking place...")
 		r, err := (*p).Exchange(q)
 		//log.Println(q.String())
 		if err != nil || r == nil {
