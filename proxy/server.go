@@ -289,7 +289,7 @@ func (s *Server) forwardMessageAndGetResponse(q *dns.Msg) (m *dns.Msg) {
 			log.Infof("%q", q.String())
 			log.Infof("%q", r.String())
 		}
-	}
+	} //log.Infof("%q", r.String())
 	return nil
 }
 
