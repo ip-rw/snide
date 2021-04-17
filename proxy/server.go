@@ -281,15 +281,15 @@ func (s *Server) forwardMessageAndGetResponse(q *dns.Msg) (m *dns.Msg) {
 			//fps.Incr(1)
 			continue
 		}
-		if r != nil && r.Rcode == dns.RcodeSuccess || r.Rcode == dns.RcodeNameError {
+		if r != nil { //&& r.Rcode == dns.RcodeSuccess || r.Rcode == dns.RcodeNameError {
 			qps.Incr(1)
 			return r
 		} else {
 			fps.Incr(1)
-			log.Infof("%q", q.String())
-			log.Infof("%q", r.String())
+			//log.Infof("%q", q.String())
+			//log.Infof("%q", r.String())
 		}
-	} //log.Infof("%q", r.String())
+	}
 	return nil
 }
 

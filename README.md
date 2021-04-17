@@ -2,7 +2,7 @@
 
 dns-over-https seems to have everybody very excited. Cloudflare runs a free DoH service alongside its vast
 network of what are effectively reverse (SNI) proxies. We can take advantage of this situation to avoid rate limiting and
-end up with a high quality, fast (10k qps) DNS resolver.
+end up with a high quality, fast (10k+ qps) DNS resolver.
 
 this is actually a fork of https://github.com/mikispag/dns-over-tls-forwarder. i've had to make some changes to 'upstream' 
 in https://github.com/AdguardTeam/dnsproxy in order to have each resolver entry take a filename instead of a single ip.
@@ -23,3 +23,13 @@ Usage of /tmp/go-build2261890375/b001/exe/main:
         comma-separated list of upstream servers (default "https://www.cloudflare-dns.com/dns-query@cloudflare.txt")
   -v    verbose mode
 ```
+
+### anecdotal evidence (dnssearch with 600 workers)
+```
+Requests : 2171687
+Results  : 1406
+Time     : 103.192774132 s
+Req/s    : 21044.952209755174
+```
+
+There is still something rattling around broken in here...
