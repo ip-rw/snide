@@ -139,9 +139,9 @@ func (p *dnsOverHTTPS) createTransport() (*http.Transport, error) {
 	}
 
 	transport := &http.Transport{
-		DialContext:         dialContext,
-		TLSClientConfig:     tlsConfig,
-		DisableKeepAlives:   true,
+		DialContext:     dialContext,
+		TLSClientConfig: tlsConfig,
+		//DisableKeepAlives:   true,
 		DisableCompression:  true,
 		MaxIdleConns:        50,
 		MaxIdleConnsPerHost: 0,
