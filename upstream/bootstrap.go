@@ -215,7 +215,7 @@ func (s *bootstrapper) createDialContext(addresses []string) (dialContext dialHa
 		Control: func(network, address string, c syscall.RawConn) error {
 			return c.Control(func(fd uintptr) {
 				var l syscall.Linger
-				l.Onoff = 1
+				l.Onoff = 0
 				l.Linger = 0
 				syscall.SetsockoptLinger(int(fd), syscall.SOL_SOCKET, syscall.SO_LINGER, &l)
 			})
