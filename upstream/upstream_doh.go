@@ -14,7 +14,7 @@ import (
 )
 
 // DoHMaxConnsPerHost controls the maximum number of connections per host.
-const DoHMaxConnsPerHost = 5
+const DoHMaxConnsPerHost = 50000
 
 // dnsOverHTTPS represents DNS-over-HTTPS upstream.
 type dnsOverHTTPS struct {
@@ -139,11 +139,17 @@ func (p *dnsOverHTTPS) createTransport() (*http.Transport, error) {
 	}
 
 	transport := &http.Transport{
-		TLSClientConfig:    tlsConfig,
-		DisableCompression: true,
-		DialContext:        dialContext,
-		MaxConnsPerHost:    DoHMaxConnsPerHost,
-		MaxIdleConns:       1,
+		DialContext:         dialContext,
+		TLSClientConfig:     tlsConfig,
+		DisableKeepAlives:   true,
+		DisableCompression:  true,
+		MaxIdleConns:        50,
+		MaxIdleConnsPerHost: 0,
+		MaxConnsPerHost:     DoHMaxConnsPerHost,
+		IdleConnTimeout:     5 * time.Second,
+		WriteBufferSize:     0,
+		ReadBufferSize:      0,
+		ForceAttemptHTTP2:   true,
 	}
 	// It appears that this is important to explicitly configure transport to use HTTP2
 	// Relevant issue: https://github.com/AdguardTeam/dnsproxy/issues/11
