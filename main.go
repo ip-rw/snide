@@ -61,12 +61,11 @@ func main() {
 		cancel()
 	}()
 	// Run the server with a default cache size and the specified upstream servers.
-	server := proxy.NewServer(0, *evictMetrics, strings.Split(*upstreamServers, ",")...)
+	server := proxy.NewServer(0, strings.Split(*upstreamServers, ",")...)
 
 	if *ppr != 0 {
 		mux := http.NewServeMux()
 		mux.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
-		mux.Handle("/debug/server/", server.DebugHandler())
 		go func() { log.Error(http.ListenAndServe(fmt.Sprintf("localhost:%d", *ppr), mux)) }()
 	}
 

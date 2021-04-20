@@ -6,6 +6,7 @@ require (
 	github.com/AdguardTeam/dnsproxy v0.37.0
 	github.com/ameshkov/dnscrypt/v2 v2.1.1
 	github.com/ameshkov/dnsstamps v1.0.3
+	github.com/hashicorp/golang-lru v0.5.4
 	github.com/joomcode/errorx v1.0.3
 	github.com/lucas-clemente/quic-go v0.20.1
 	github.com/miekg/dns v1.1.41

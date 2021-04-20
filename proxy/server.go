@@ -4,16 +4,14 @@ import (
 	"bufio"
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"errors"
-	"github.com/ip-rw/snide/proxy/internal/specialized"
+	"github.com/hashicorp/golang-lru"
 	"github.com/ip-rw/snide/upstream"
 	"github.com/miekg/dns"
 	"github.com/paulbellamy/ratecounter"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"net"
-	"net/http"
 	"os"
 	"strings"
 	"sync"
@@ -24,7 +22,6 @@ const (
 	defaultCacheSize       = 65536
 	connectionTimeout      = 30 * time.Second
 	connectionsPerUpstream = 10000
-	refreshQueueSize       = 50000
 	timerResolution        = 1 * time.Second
 )
 
@@ -33,7 +30,7 @@ var fps = ratecounter.NewRateCounter(time.Second * 5)
 
 // Server is a caching DNS proxy that upgrades DNS to DNS over TLS.
 type Server struct {
-	cache     *cache
+	cache     *lru.Cache
 	upstreams []*upstream.Upstream
 	rq        chan *dns.Msg
 	Dial      func(addr string, cfg *tls.Config) (net.Conn, error)
@@ -48,20 +45,20 @@ type Server struct {
 // Calling New(0) is valid and comes with working defaults:
 // * If cacheSize is 0 a default value will be used. to disable caches use a negative value.
 // * If no upstream servers are specified default ones will be used.
-func NewServer(cacheSize int, evictMetrics bool, upstreamServers ...string) *Server {
+func NewServer(cacheSize int, upstreamServers ...string) *Server {
 	switch {
 	case cacheSize == 0:
 		cacheSize = defaultCacheSize
 	case cacheSize < 0:
 		cacheSize = 0
 	}
-	cache, err := newCache(cacheSize, evictMetrics)
+	cache, err := lru.New(cacheSize) //, evictMetrics)
 	if err != nil {
 		log.Fatal("Unable to initialize the cache")
 	}
 	s := &Server{
 		cache: cache,
-		rq:    make(chan *dns.Msg, refreshQueueSize),
+		rq:    make(chan *dns.Msg),
 		ips:   []string{},
 		Dial: func(addr string, cfg *tls.Config) (net.Conn, error) {
 			return tls.Dial("tcp", addr, cfg)
@@ -155,13 +152,10 @@ func (s *Server) Run(ctx context.Context, addr string) error {
 		s := s
 		g.Go(func() error { return s.ListenAndServe() })
 	}
-
-	s.startTime = time.Now()
 	log.Infof("DNS forwarder listening on %v", addr)
 	return g.Wait()
 }
 
-// ServeDNS implements miekg/dns.Handler for Server.
 func (s *Server) ServeDNS(w dns.ResponseWriter, q *dns.Msg) {
 	inboundIP, _, _ := net.SplitHostPort(w.RemoteAddr().String())
 	log.Debugf("Question from %s: %q", inboundIP, q.Question[0])
@@ -175,62 +169,11 @@ func (s *Server) ServeDNS(w dns.ResponseWriter, q *dns.Msg) {
 	}
 }
 
-type debugStats struct {
-	CacheMetrics       specialized.CacheMetrics
-	CacheLen, CacheCap int
-	Uptime             string
-}
-
-// DebugHandler returns an http.Handler that serves debug stats.
-func (s *Server) DebugHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		buf, err := json.MarshalIndent(debugStats{
-			s.cache.c.Metrics(),
-			s.cache.c.Len(),
-			s.cache.c.Cap(),
-			time.Since(s.startTime).String(),
-		}, "", " ")
-		if err != nil {
-			http.Error(w, "Unable to retrieve debug info", http.StatusInternalServerError)
-			return
-		}
-		_, _ = w.Write(buf)
-	})
-}
-
 func (s *Server) getAnswer(q *dns.Msg) *dns.Msg {
-	m, ok := s.cache.get(q)
-	// Cache HIT.
-	if ok {
-		return m
+	if m, ok := s.cache.Get(q); ok {
+		return m.(*dns.Msg)
 	}
-	// If there is a cache HIT with an expired TTL, speculatively return the cache entry anyway with a short TTL, and refresh it.
-	if !ok && m != nil {
-		s.refresh(q)
-		return m
-	}
-	// If there is a cache MISS, forward the message upstream and return the answer.
-	// miek/dns does not pass a context so we fallback to Background.
 	return s.forwardMessageAndCacheResponse(q)
-}
-
-func (s *Server) refresh(q *dns.Msg) {
-	select {
-	case s.rq <- q:
-	default:
-	}
-}
-
-func (s *Server) refresher(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case q := <-s.rq:
-			s.forwardMessageAndCacheResponse(q)
-		}
-	}
 }
 
 func (s *Server) timer(ctx context.Context) {
@@ -248,13 +191,6 @@ func (s *Server) timer(ctx context.Context) {
 	}
 }
 
-func (s *Server) now() time.Time {
-	s.mu.RLock()
-	t := s.currentTime
-	s.mu.RUnlock()
-	return t
-}
-
 func (s *Server) forwardMessageAndCacheResponse(q *dns.Msg) (m *dns.Msg) {
 	for c := 0; m == nil && c < connectionsPerUpstream; c++ {
 		log.Tracef("(Re)trying %q [%d/%d]...", q.Question, c+1, connectionsPerUpstream)
@@ -267,7 +203,7 @@ func (s *Server) forwardMessageAndCacheResponse(q *dns.Msg) (m *dns.Msg) {
 		log.Debugf("Giving up on %q after %d connection retries.", q.Question, connectionsPerUpstream)
 		return nil
 	}
-	s.cache.put(q, m)
+	s.cache.Add(q, m)
 	return m
 }
 

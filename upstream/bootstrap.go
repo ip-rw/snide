@@ -228,11 +228,8 @@ func (s *bootstrapper) createDialContext(addresses []string) (dialContext dialHa
 		// Return first connection without error
 		// Note that we're using bootstrapped resolverAddress instead of what's passed to the function
 		var index int
-		max := len(addresses)
-		if max > 5 {
-			max = 5
-		}
-		for i := 0; i < 5; i++ {
+
+		for i := 0; i < len(addresses); i++ {
 			index = s.NextIndex()
 			resolverAddress := addresses[index]
 			log.Debugf("Dialing to %s", resolverAddress)
