@@ -21,7 +21,7 @@ import (
 const (
 	defaultCacheSize       = 65536
 	connectionTimeout      = 30 * time.Second
-	connectionsPerUpstream = 10000
+	connectionsPerUpstream = 50000
 	timerResolution        = 1 * time.Second
 )
 

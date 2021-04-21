@@ -14,7 +14,7 @@ import (
 )
 
 // DoHMaxConnsPerHost controls the maximum number of connections per host.
-const DoHMaxConnsPerHost = 10
+const DoHMaxConnsPerHost = 50000
 
 // dnsOverHTTPS represents DNS-over-HTTPS upstream.
 type dnsOverHTTPS struct {
