@@ -141,19 +141,16 @@ func (p *dnsOverHTTPS) createTransport() (*http.Transport, error) {
 		DialContext:            dialContext,
 		TLSClientConfig:        tlsConfig,
 		DisableCompression:     true,
+		DisableKeepAlives:      true,
 		MaxIdleConns:           0,
 		MaxIdleConnsPerHost:    0,
 		MaxConnsPerHost:        DoHMaxConnsPerHost,
 		IdleConnTimeout:        0,
 		ResponseHeaderTimeout:  0,
 		ExpectContinueTimeout:  0,
-		TLSNextProto:           nil,
-		ProxyConnectHeader:     nil,
-		GetProxyConnectHeader:  nil,
 		MaxResponseHeaderBytes: 0,
 		WriteBufferSize:        0,
 		ReadBufferSize:         0,
-		ForceAttemptHTTP2:      true,
 	}
 	http2.ConfigureTransport(transport)
 	// It appears that this is important to explicitly configure transport to use HTTP2
