@@ -10,7 +10,6 @@ import (
 
 	"github.com/joomcode/errorx"
 	"github.com/miekg/dns"
-	"golang.org/x/net/http2"
 )
 
 // DoHMaxConnsPerHost controls the maximum number of connections per host.
@@ -131,26 +130,32 @@ func (p *dnsOverHTTPS) createClient() (*http.Client, error) {
 // createTransport initializes an HTTP transport that will be used specifically
 // for this DOH resolver. This HTTP transport ensures that the HTTP requests
 // will be sent exactly to the IP address got from the bootstrap resolver.
-func (p *dnsOverHTTPS) createTransport() (*http2.Transport, error) {
+func (p *dnsOverHTTPS) createTransport() (*http.Transport, error) {
 	tlsConfig, dialContext, err := p.boot.get()
 	if err != nil {
 		return nil, errorx.Decorate(err, "couldn't bootstrap %s", p.boot.address)
 	}
 
 	transport := &http.Transport{
-		TLSClientConfig:    tlsConfig,
-		DisableCompression: true,
-		DialContext:        dialContext,
-		MaxConnsPerHost:    DoHMaxConnsPerHost,
-		MaxIdleConns:       10,
+		DialContext:            dialContext,
+		TLSClientConfig:        tlsConfig,
+		DisableCompression:     true,
+		MaxIdleConns:           0,
+		MaxIdleConnsPerHost:    0,
+		MaxConnsPerHost:        DoHMaxConnsPerHost,
+		IdleConnTimeout:        0,
+		ResponseHeaderTimeout:  0,
+		ExpectContinueTimeout:  0,
+		TLSNextProto:           nil,
+		ProxyConnectHeader:     nil,
+		GetProxyConnectHeader:  nil,
+		MaxResponseHeaderBytes: 0,
+		WriteBufferSize:        0,
+		ReadBufferSize:         0,
+		ForceAttemptHTTP2:      true,
 	}
 
 	// It appears that this is important to explicitly configure transport to use HTTP2
 	// Relevant issue: https://github.com/AdguardTeam/dnsproxy/issues/11
-	t2, err := http2.ConfigureTransports(transport) // nolint
-	if err != nil {
-		fmt.Println(err)
-	}
-	t2.StrictMaxConcurrentStreams = true
-	return t2, nil
+	return transport, nil
 }
