@@ -3,6 +3,7 @@ package upstream
 import (
 	"encoding/base64"
 	"fmt"
+	"golang.org/x/net/http2"
 	"io/ioutil"
 	"net/http"
 	"sync"
@@ -154,7 +155,7 @@ func (p *dnsOverHTTPS) createTransport() (*http.Transport, error) {
 		ReadBufferSize:         0,
 		ForceAttemptHTTP2:      true,
 	}
-
+	http2.ConfigureTransport(transport)
 	// It appears that this is important to explicitly configure transport to use HTTP2
 	// Relevant issue: https://github.com/AdguardTeam/dnsproxy/issues/11
 	return transport, nil
