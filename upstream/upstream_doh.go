@@ -147,8 +147,6 @@ func (p *dnsOverHTTPS) createTransport() (*http.Transport, error) {
 	transport := &http.Transport{
 		DialContext:         dialContext,
 		TLSClientConfig:     tlsConfig,
-		TLSHandshakeTimeout: 0,
-		DisableKeepAlives:   true,
 		DisableCompression:  true,
 		MaxIdleConns:        1,
 		MaxIdleConnsPerHost: 0,

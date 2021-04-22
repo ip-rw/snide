@@ -215,7 +215,8 @@ func (s *bootstrapper) createTLSConfig(host string) *tls.Config {
 // createDialContext returns dialContext function that tries to establish connection with all given addresses one by one
 func (s *bootstrapper) createDialContext(addresses []string) (dialContext dialHandler) {
 	dialer := &net.Dialer{
-		Timeout: s.options.Timeout,
+		Timeout:   s.options.Timeout,
+		KeepAlive: time.Second,
 		Control: func(network, address string, c syscall.RawConn) error {
 			return c.Control(func(fd uintptr) {
 				syscall.SetsockoptLinger(int(fd), syscall.SOL_SOCKET, syscall.SO_LINGER, &syscall.Linger{1, 0})
