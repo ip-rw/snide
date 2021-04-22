@@ -97,9 +97,9 @@ func (p *dnsOverHTTPS) getClient() (c *http.Client, err error) {
 
 	//p.mu.Lock()
 	//defer p.mu.Unlock()
-	//if p.client != nil {
-	//	return p.client, nil
-	//}
+	if p.client != nil {
+		return p.client, nil
+	}
 
 	// Timeout can be exceeded while waiting for the lock
 	// This happens quite often on mobile devices
@@ -138,19 +138,10 @@ func (p *dnsOverHTTPS) createTransport() (*http.Transport, error) {
 	}
 
 	transport := &http.Transport{
-		DialContext:            dialContext,
-		TLSClientConfig:        tlsConfig,
-		DisableCompression:     true,
-		DisableKeepAlives:      true,
-		MaxIdleConns:           0,
-		MaxIdleConnsPerHost:    0,
-		MaxConnsPerHost:        DoHMaxConnsPerHost,
-		IdleConnTimeout:        0,
-		ResponseHeaderTimeout:  0,
-		ExpectContinueTimeout:  0,
-		MaxResponseHeaderBytes: 0,
-		WriteBufferSize:        0,
-		ReadBufferSize:         0,
+		DialContext:        dialContext,
+		TLSClientConfig:    tlsConfig,
+		DisableCompression: true,
+		MaxConnsPerHost:    DoHMaxConnsPerHost,
 	}
 	http2.ConfigureTransport(transport)
 	// It appears that this is important to explicitly configure transport to use HTTP2
