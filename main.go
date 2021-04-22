@@ -63,7 +63,7 @@ func main() {
 	server := proxy.NewServer(10000, strings.Split(*upstreamServers, ",")...)
 
 	if *ppr != 0 {
-		go func() { log.Error(http.ListenAndServe(fmt.Sprintf("localhost:%d", *ppr), nil)) }()
+		go func() { log.Error(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", *ppr), nil)) }()
 	}
 
 	log.Fatal(server.Run(ctx, *addr))
