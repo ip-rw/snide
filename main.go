@@ -8,7 +8,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"net/http/pprof"
 	_ "net/http/pprof"
 	"os"
 	"path"
@@ -61,12 +60,10 @@ func main() {
 		cancel()
 	}()
 	// Run the server with a default cache size and the specified upstream servers.
-	server := proxy.NewServer(0, strings.Split(*upstreamServers, ",")...)
+	server := proxy.NewServer(10000, strings.Split(*upstreamServers, ",")...)
 
 	if *ppr != 0 {
-		mux := http.NewServeMux()
-		mux.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
-		go func() { log.Error(http.ListenAndServe(fmt.Sprintf("localhost:%d", *ppr), mux)) }()
+		go func() { log.Error(http.ListenAndServe(fmt.Sprintf("localhost:%d", *ppr), nil)) }()
 	}
 
 	log.Fatal(server.Run(ctx, *addr))
