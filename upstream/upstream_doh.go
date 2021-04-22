@@ -145,10 +145,15 @@ func (p *dnsOverHTTPS) createTransport() (*http.Transport, error) {
 	}
 
 	transport := &http.Transport{
-		DialContext:        dialContext,
-		TLSClientConfig:    tlsConfig,
-		DisableCompression: true,
-		MaxConnsPerHost:    DoHMaxConnsPerHost,
+		DialContext:         dialContext,
+		TLSClientConfig:     tlsConfig,
+		TLSHandshakeTimeout: 0,
+		DisableKeepAlives:   true,
+		DisableCompression:  true,
+		MaxIdleConns:        1,
+		MaxIdleConnsPerHost: 0,
+		MaxConnsPerHost:     DoHMaxConnsPerHost,
+		IdleConnTimeout:     time.Second,
 	}
 	t2, err := http2.ConfigureTransports(transport)
 	t2.StrictMaxConcurrentStreams = false
