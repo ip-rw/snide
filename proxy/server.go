@@ -21,7 +21,7 @@ import (
 const (
 	defaultCacheSize       = 65536
 	connectionTimeout      = 30 * time.Second
-	connectionsPerUpstream = 50000
+	connectionsPerUpstream = 3
 	timerResolution        = 1 * time.Second
 )
 
@@ -203,7 +203,7 @@ func (s *Server) forwardMessageAndCacheResponse(q *dns.Msg) (m *dns.Msg) {
 		log.Debugf("Giving up on %q after %d connection retries.", q.Question, connectionsPerUpstream)
 		return nil
 	}
-	s.cache.Add(q, m)
+	go s.cache.Add(q, m)
 	return m
 }
 
@@ -218,10 +218,10 @@ func (s *Server) forwardMessageAndGetResponse(q *dns.Msg) (m *dns.Msg) {
 			continue
 		}
 		if r != nil { //&& r.Rcode == dns.RcodeSuccess || r.Rcode == dns.RcodeNameError {
-			qps.Incr(1)
+			go qps.Incr(1)
 			return r
 		} else {
-			fps.Incr(1)
+			go fps.Incr(1)
 			//log.Infof("%q", q.String())
 			//log.Infof("%q", r.String())
 		}
