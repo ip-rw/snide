@@ -66,8 +66,8 @@ func (p *dnsOverHTTPS) exchangeHTTPSClient(m *dns.Msg, client *http.Client) (*dn
 
 	n := p.boot.NextIndex()
 	if n%50 == 0 {
-		fmt.Println("closing")
-		client.CloseIdleConnections()
+		//fmt.Println("closing")
+		defer client.CloseIdleConnections()
 		req.Close = true
 	} else {
 		fmt.Println("open")
