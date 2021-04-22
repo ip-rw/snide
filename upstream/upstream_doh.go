@@ -69,8 +69,8 @@ func (p *dnsOverHTTPS) exchangeHTTPSClient(m *dns.Msg, client *http.Client) (*dn
 		//fmt.Println("closing")
 		defer client.CloseIdleConnections()
 		req.Close = true
-	} else {
-		fmt.Println("open")
+		//} else {
+		//	fmt.Println("open")
 	}
 	resp, err := client.Do(req)
 	if resp != nil && resp.Body != nil {
