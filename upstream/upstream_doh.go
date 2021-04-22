@@ -138,7 +138,7 @@ func (p *dnsOverHTTPS) createClient() (*http.Client, error) {
 // createTransport initializes an HTTP transport that will be used specifically
 // for this DOH resolver. This HTTP transport ensures that the HTTP requests
 // will be sent exactly to the IP address got from the bootstrap resolver.
-func (p *dnsOverHTTPS) createTransport() (*http2.Transport, error) {
+func (p *dnsOverHTTPS) createTransport() (*http.Transport, error) {
 	tlsConfig, dialContext, err := p.boot.get()
 	if err != nil {
 		return nil, errorx.Decorate(err, "couldn't bootstrap %s", p.boot.address)
@@ -151,9 +151,8 @@ func (p *dnsOverHTTPS) createTransport() (*http2.Transport, error) {
 		MaxConnsPerHost:    DoHMaxConnsPerHost,
 	}
 	t2, err := http2.ConfigureTransports(transport)
-	println(err)
-	t2.StrictMaxConcurrentStreams = true
+	t2.StrictMaxConcurrentStreams = false
 	// It appears that this is important to explicitly configure transport to use HTTP2
 	// Relevant issue: https://github.com/AdguardTeam/dnsproxy/issues/11
-	return t2, nil
+	return transport, nil
 }
