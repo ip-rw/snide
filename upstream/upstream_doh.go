@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"golang.org/x/net/http2"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -65,9 +64,9 @@ func (p *dnsOverHTTPS) exchangeHTTPSClient(m *dns.Msg, client *http.Client) (*dn
 	}
 	req.Header.Set("Accept", "application/dns-message")
 
-	if rand.Intn(1000)%5 == 0 {
+	if p.boot.NextIndex()%5 == 0 {
 		fmt.Println("closing")
-		//client.CloseIdleConnections()
+		client.CloseIdleConnections()
 		req.Close = true
 	} else {
 		fmt.Println("open")
