@@ -14,7 +14,7 @@ import (
 )
 
 // DoHMaxConnsPerHost controls the maximum number of connections per host.
-const DoHMaxConnsPerHost = 1000
+const DoHMaxConnsPerHost = 10000
 
 // dnsOverHTTPS represents DNS-over-HTTPS upstream.
 type dnsOverHTTPS struct {
@@ -95,11 +95,11 @@ func (p *dnsOverHTTPS) exchangeHTTPSClient(m *dns.Msg, client *http.Client) (*dn
 func (p *dnsOverHTTPS) getClient() (c *http.Client, err error) {
 	startTime := time.Now()
 
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.client != nil {
-		return p.client, nil
-	}
+	//p.mu.Lock()
+	//defer p.mu.Unlock()
+	//if p.client != nil {
+	//	return p.client, nil
+	//}
 
 	// Timeout can be exceeded while waiting for the lock
 	// This happens quite often on mobile devices
