@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"math/rand"
 	"net"
 	"net/url"
 	"strings"
@@ -220,7 +221,6 @@ func (s *bootstrapper) createDialContext(addresses []string) (dialContext dialHa
 				syscall.SetsockoptLinger(int(fd), syscall.SOL_SOCKET, syscall.SO_LINGER, &syscall.Linger{1, 0})
 				syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, syscall.TCP_NODELAY, 1)
 			})
-
 		},
 	}
 
@@ -229,11 +229,11 @@ func (s *bootstrapper) createDialContext(addresses []string) (dialContext dialHa
 
 		// Return first connection without error
 		// Note that we're using bootstrapped resolverAddress instead of what's passed to the function
-		var index int
+		//var index int
 
 		for i := 0; i < len(addresses); i++ {
-			index = s.NextIndex()
-			resolverAddress := addresses[index]
+			//index = s.NextIndex()
+			resolverAddress := addresses[rand.Intn(len(addresses))]
 			log.Debugf("Dialing to %s", resolverAddress)
 			start := time.Now()
 			con, err := dialer.DialContext(ctx, network, resolverAddress)
