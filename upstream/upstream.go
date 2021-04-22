@@ -44,7 +44,7 @@ type Options struct {
 	VerifyServerCertificate func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error
 
 	// VerifyDNSCryptCertificate is callback to which the DNSCrypt server certificate will be passed.
-	// is called in dnsCrypt.exchangeDNSCrypt; if error != nil then Upstream.Exchange() will return it
+	// is called in dnsCrypt.excha	ngeDNSCrypt; if error != nil then Upstream.Exchange() will return it
 	VerifyDNSCryptCertificate func(cert *dnscrypt.Cert) error
 }
 

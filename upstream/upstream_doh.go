@@ -98,7 +98,7 @@ func (p *dnsOverHTTPS) getClient() (c *http.Client, err error) {
 	//p.mu.Lock()
 	//defer p.mu.Unlock()
 	if p.client != nil {
-		p.client.CloseIdleConnections()
+		//p.client.CloseIdleConnections()
 		return p.client, nil
 	}
 

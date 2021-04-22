@@ -190,15 +190,18 @@ func (s *bootstrapper) get() (*tls.Config, dialHandler, error) {
 	return s.resolvedConfig, s.dialContext, nil
 }
 
+var cache = tls.NewLRUClientSessionCache(10000)
+
 // createTLSConfig creates a client TLS config
 func (s *bootstrapper) createTLSConfig(host string) *tls.Config {
 	tlsConfig := &tls.Config{
 		ServerName:            host,
-		RootCAs:               RootCAs,
+		RootCAs:               &x509.CertPool{},
 		CipherSuites:          CipherSuites,
-		MinVersion:            tls.VersionTLS12,
 		InsecureSkipVerify:    s.options.InsecureSkipVerify,
 		VerifyPeerCertificate: s.options.VerifyServerCertificate,
+		ClientSessionCache:    cache,
+		Renegotiation:         tls.RenegotiateFreelyAsClient,
 	}
 
 	tlsConfig.NextProtos = []string{
@@ -215,7 +218,7 @@ func (s *bootstrapper) createDialContext(addresses []string) (dialContext dialHa
 		Control: func(network, address string, c syscall.RawConn) error {
 			return c.Control(func(fd uintptr) {
 				var l syscall.Linger
-				l.Onoff = 0
+				l.Onoff = 1
 				l.Linger = 0
 				syscall.SetsockoptLinger(int(fd), syscall.SOL_SOCKET, syscall.SO_LINGER, &l)
 			})
