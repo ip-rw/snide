@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/net/http2"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -63,7 +64,10 @@ func (p *dnsOverHTTPS) exchangeHTTPSClient(m *dns.Msg, client *http.Client) (*dn
 		return nil, errorx.Decorate(err, "couldn't create a HTTP request to %s", p.boot.address)
 	}
 	req.Header.Set("Accept", "application/dns-message")
-
+	if rand.Intn(5)%5 == 0 {
+		fmt.Println("closing")
+		req.Close = true
+	}
 	resp, err := client.Do(req)
 	if resp != nil && resp.Body != nil {
 		defer resp.Body.Close()
