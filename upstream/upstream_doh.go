@@ -64,8 +64,10 @@ func (p *dnsOverHTTPS) exchangeHTTPSClient(m *dns.Msg, client *http.Client) (*dn
 		return nil, errorx.Decorate(err, "couldn't create a HTTP request to %s", p.boot.address)
 	}
 	req.Header.Set("Accept", "application/dns-message")
-	if rand.Intn(5)%5 == 0 {
+
+	if rand.Intn(1000)%5 == 0 {
 		fmt.Println("closing")
+		client.CloseIdleConnections()
 		req.Close = true
 	}
 	resp, err := client.Do(req)
