@@ -154,7 +154,7 @@ func (p *dnsOverHTTPS) createTransport() (*http.Transport, error) {
 		IdleConnTimeout:     time.Second,
 	}
 	t2, err := http2.ConfigureTransports(transport)
-	t2.StrictMaxConcurrentStreams = false
+	t2.StrictMaxConcurrentStreams = true
 	// It appears that this is important to explicitly configure transport to use HTTP2
 	// Relevant issue: https://github.com/AdguardTeam/dnsproxy/issues/11
 	return transport, nil
